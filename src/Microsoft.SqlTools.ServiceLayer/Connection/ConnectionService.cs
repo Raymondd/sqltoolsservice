@@ -21,6 +21,9 @@ using Microsoft.SqlTools.ServiceLayer.Utility;
 using Microsoft.SqlTools.ServiceLayer.Workspace;
 using Microsoft.SqlServer.Management.Common;
 
+using DataConnectionInfo = Microsoft.SqlTools.ServiceLayer.Connection.ProtocolContracts.ConnectionInfo;
+using Microsoft.SqlTools.ServiceLayer.Connection.ProtocolContracts;
+
 namespace Microsoft.SqlTools.ServiceLayer.Connection
 {
     /// <summary>
@@ -659,6 +662,7 @@ namespace Microsoft.SqlTools.ServiceLayer.Connection
             serviceHost.SetRequestHandler(CancelConnectRequest.Type, HandleCancelConnectRequest);
             serviceHost.SetRequestHandler(DisconnectRequest.Type, HandleDisconnectRequest);
             serviceHost.SetRequestHandler(ListDatabasesRequest.Type, HandleListDatabasesRequest);
+            serviceHost.SetRequestHandler(ListConnectionRequest.Type, HandleListConnectionsRequest);
 
             // Register the configuration update handler
             WorkspaceService<SqlToolsSettings>.Instance.RegisterConfigChangeCallback(HandleDidChangeConfigurationNotification);
@@ -773,6 +777,30 @@ namespace Microsoft.SqlTools.ServiceLayer.Connection
                 await requestContext.SendError(ex.ToString());
             }
 
+        }
+
+
+        /// <summary>
+        /// Handle requests to list connections
+        /// </summary>
+        protected async Task HandleListConnectionsRequest(
+            ListConnectionParams listConnectionsParams,
+            RequestContext<DataConnectionInfo[]> requestContext)
+        {
+            DataConnectionInfo[] connInfos = new DataConnectionInfo[1];
+            connInfos[0].ServerName = "localhost";
+            connInfos[0].DatabaseName = "master";
+
+            Logger.Write(LogLevel.Verbose, "ListConnectionsRequest");
+
+            try
+            {
+                await requestContext.SendResult(connInfos);
+            }
+            catch (Exception ex)
+            {
+                await requestContext.SendError(ex.ToString());
+            }
         }
 
         /// <summary>
